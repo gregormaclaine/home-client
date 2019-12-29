@@ -1,26 +1,33 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import { connect } from 'react-redux';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+import { changePassword } from './actions'
+
+import Header from './components/Header';
+
+import HomePage from './components/Home';
+import LogsPage from './components/Logs';
+import LogPage from './components/Log';
+import NotFoundPage from './components/NotFoundPage';
+
+class App extends React.Component {
+  render() {
+    const { password } = this.props;
+    
+    return (
+      <Router>
+        <Header password={password} changePassword={p => this.props.dispatch(changePassword(p))} />
+        <Switch>
+          <Route path="/" exact={true} component={HomePage} />
+          <Route path="/logs" exact={true} component={LogsPage} />
+          <Route path="/logs/:folder/:file" component={LogPage} />
+          <Route component={NotFoundPage} />
+        </Switch>
+      </Router>
+    );
+  }
 }
 
-export default App;
+const mapStateToProps = state => state;
+export default connect(mapStateToProps)(App);
