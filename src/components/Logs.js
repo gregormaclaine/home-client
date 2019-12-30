@@ -3,15 +3,23 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
-import moment from 'moment';
+import { darken } from 'polished';
 
 import { readLogs } from '../actions';
+import { orange, Loader, ErrorWindow } from './elements';
+
+const Flex = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 20px;
+  width: ${document.body.clientWidth - 40}px;
+`;
 
 const FolderContainer = styled.div`
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  padding: 20px;
 `;
 
 const LogFolder = styled.div`
@@ -31,19 +39,28 @@ const FolderTitle = styled.p`
   text-transform: uppercase;
   font-weight: 900;
   font-size: 25px;
+  margin-bottom: 5px;
+`;
+
+const RefreshButton = styled.button`
+  border-radius: 5px;
+  padding: 10px 30px;
+  background-color: ${orange};
+  border: 1px solid ${darken(0.3, orange)};
+  font-weight: 600;
+  cursor: pointer;
+  :hover { background-color: ${darken(0.1, orange)} }
 `;
 
 const FileLink = styled(Link)`
   text-decoration: none;
-  ${({ bold, recent }) => (bold || recent) ? 'font-weight: 600;' : ''}
+  font-weight: 600;
   color: ${({ recent }) => recent ? 'red' : 'inherit'};
   :hover { text-decoration: underline; }
 `;
 
 const File = ({ folder, file, recent }) => (
-  <FileLink to={`/logs/${folder}/${file}`} bold={file.includes('(') ? '' : ' '} recent={recent ? ' ' : ''}>
-    {file}
-  </FileLink>
+  <FileLink to={`/logs/${folder}/${file}`} recent={recent ? ' ' : ''}>{file}</FileLink>
 );
 
 class LogsPage extends React.Component {
@@ -61,39 +78,40 @@ class LogsPage extends React.Component {
     this.props.dispatch(readLogs());
   }
 
-  getRecentFiles() {
-    return Object.entries(this.props.logs.logs).reduce((obj, [ folder, files ]) => {
-      const recentDate = moment(Object.keys(files).map(f => moment(f.substr(0, 8), 'DD-MM-YY')).reduce((r, f) => moment(r).isAfter(f) ? r : f)).format('DD-MM-YY');
-  
-      const todaysFiles = Object.keys(files).filter(f => f.substr(0, 8) === recentDate);
-      const file = todaysFiles.reduce((max, file) => {
-        const maxNum = max.match(/\((\d+)\)/);
-        const fileNum = file.match(/\((\d+)\)/);
-        return parseInt(maxNum ? maxNum[1] : '1') > parseInt(fileNum ? fileNum[1] : '1') ? max : file;
-      });
-
-      return { ...obj, [folder]: file };
-    }, {});
-  }
-
   render() {
     const { logs } = this.props.logs;
-    const recentFiles = this.getRecentFiles();
 
     if (this.password !== this.props.password) {
       this.props.dispatch(readLogs());
       this.password = this.props.password;
     }
 
+    const folders = Object.entries(logs)
+      .filter(([ , files ]) => Object.keys(files).length > 0)
+      .sort((a, b) => a[0].toUpperCase() > b[0].toUpperCase() ? 1 : -1)
+      .map(([ folder, files ]) => {
+        const sortedFiles = Object.keys(files).sort((a, b) => {
+          return a.substr(0, 8) > b.substr(0, 8) ? -1 : 1;
+        });
+        return [ folder, sortedFiles ];
+      });
+      
+    if (this.props.logs.fetching) return <Loader />;
+    if (this.props.logs.error) return <ErrorWindow message={this.props.logs.error.message} />;
+    if (folders.length === 0) return <ErrorWindow />;
+
     return (
       <React.Fragment>
         <Helmet><title>GServer | Log</title></Helmet>
+        <Flex>
+          <RefreshButton onClick={() => this.props.dispatch(readLogs())}>Refresh Log Folders</RefreshButton>
+        </Flex>
         <FolderContainer>
-          {Object.entries(logs).sort((a, b) => a[0].toUpperCase() > b[0].toUpperCase() ? 1 : -1).map(([folder, files]) => (
+          {folders.map(([ folder, files ]) => (
             <LogFolder key={folder}>
               <FolderTitle>{folder}</FolderTitle>
-              {Object.keys(files).map(f => <File folder={folder} file={f} key={f} recent={recentFiles[folder] === f} />)}
-            </LogFolder>
+              {files.map((f, i) => <File folder={folder} file={f} key={f} recent={i === 0} />)}
+            </LogFolder>  
           ))}
         </FolderContainer>
       </React.Fragment>

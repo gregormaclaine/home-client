@@ -1,8 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
+import { connect } from 'react-redux';
 import styled from 'styled-components';
 
 import { blue, yellow } from './elements';
+import { changePassword } from '../actions';
+import { darken } from 'polished';
 
 const NavBar = styled.div`
   width: 100%;
@@ -14,9 +17,7 @@ const NavBar = styled.div`
   @media (max-width: 768px) {
     flex-direction: column;
     height: auto;
-    * {
-      margin: 5px;
-    }
+    * { margin: 5px; }
   }
 `;
 
@@ -28,21 +29,30 @@ const Title = styled.h1`
 
 const Links = styled.div`
   position: relative;
-  padding: 5px 10px;
+  height: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
 `;
 
-const NavLinkWrapper = styled(Link)`
+const NavLinkWrapper = styled(NavLink)`
+  display: flex;
+  justify-content: center;
+  align-items: center;
   color: #ffffff;
   font-weight: 600;
+  padding: 0px 8px;
   text-decoration: none;
-  margin: 0px 8px;
-  :hover { text-decoration: underline; }
+  text-align: center;
+  height: 100%;
+  :hover { text-decoration: underline; background-color: ${darken(0.2, blue)}; }
 `;
 
-const NavLink = ({ to, name, icon }) => <NavLinkWrapper to={to}><span role='img' aria-label="logs">{icon}</span> {name}</NavLinkWrapper>;
+const NavBarLink = ({ name, icon, ...props }) => (
+  <NavLinkWrapper {...props} activeStyle={{ backgroundColor: darken(0.2, blue) }}>
+    <span role='img' aria-label="logs">{icon}</span>&nbsp;{name}
+  </NavLinkWrapper>
+);
 
 class Header extends React.Component {
   render() {
@@ -59,19 +69,20 @@ class Header extends React.Component {
             autoCorrect="off"
             autoCapitalize="none"
             value={this.props.password}
-            onChange={e => this.props.changePassword(e.target.value)}
+            onChange={e => this.props.dispatch(changePassword(e.target.value))}
             style={{ fontWeight: 900 }}
           />
         </span>
 
         <Links>
-          <NavLink to="/logs" name="Logs" icon="📜" />
-          <NavLink to="/" name="Temp1" icon="🐎" />
-          <NavLink to="/" name="Temp2" icon="🎥" />
+          <NavBarLink to="/logs" name="Logs" icon="📜" />
+          <NavBarLink to="/" name="Temp1" icon="🐎" exact />
+          <NavBarLink to="/" name="Temp2" icon="🎥" exact />
         </Links>
       </NavBar>
     );
   }
 }
 
-export default Header;
+const mapStateToProps = ({ password }) => ({ password });
+export default connect(mapStateToProps)(Header);

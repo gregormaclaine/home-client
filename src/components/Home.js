@@ -5,7 +5,7 @@ import api from '../utilities/api';
 
 class HomePage extends React.Component {
   componentDidMount() {
-    api('/');
+    api.get('/');
   }
 
   render() {
