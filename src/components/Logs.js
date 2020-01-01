@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { darken } from 'polished';
+import moment from 'moment';
 
 import { readLogs } from '../actions';
 import { orange, Loader, ErrorWindow } from './elements';
@@ -91,7 +92,7 @@ class LogsPage extends React.Component {
       .sort((a, b) => a[0].toUpperCase() > b[0].toUpperCase() ? 1 : -1)
       .map(([ folder, files ]) => {
         const sortedFiles = Object.keys(files).sort((a, b) => {
-          return a.substr(0, 8) > b.substr(0, 8) ? -1 : 1;
+          return moment(a.substr(0, 8), 'DD-MM-YY').isBefore(moment(b.substr(0, 8), 'DD-MM-YY')) ? 1 : -1;
         });
         return [ folder, sortedFiles ];
       });
