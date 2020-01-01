@@ -7,7 +7,7 @@ import { darken } from 'polished';
 import moment from 'moment';
 
 import { readLogs } from '../actions';
-import { orange, Loader, ErrorWindow } from './elements';
+import { orange, DataView } from './elements';
 
 const Flex = styled.div`
   display: flex;
@@ -96,25 +96,23 @@ class LogsPage extends React.Component {
         });
         return [ folder, sortedFiles ];
       });
-      
-    if (this.props.logs.fetching) return <Loader />;
-    if (this.props.logs.error) return <ErrorWindow message={this.props.logs.error.message} />;
-    if (folders.length === 0) return <ErrorWindow />;
 
     return (
       <React.Fragment>
         <Helmet><title>GServer | Log</title></Helmet>
-        <Flex>
-          <RefreshButton onClick={() => this.props.dispatch(readLogs())}>Refresh Log Folders</RefreshButton>
-        </Flex>
-        <FolderContainer>
-          {folders.map(([ folder, files ]) => (
-            <LogFolder key={folder}>
-              <FolderTitle>{folder}</FolderTitle>
-              {files.map((f, i) => <File folder={folder} file={f} key={f} recent={i === 0} />)}
-            </LogFolder>  
-          ))}
-        </FolderContainer>
+        <DataView isLoading={this.props.logs.fetching} isData={folders.length > 0} error={this.props.logs.error}>
+          <Flex>
+            <RefreshButton onClick={() => this.props.dispatch(readLogs())}>Refresh Log Folders</RefreshButton>
+          </Flex>
+          <FolderContainer>
+            {folders.map(([ folder, files ]) => (
+              <LogFolder key={folder}>
+                <FolderTitle>{folder}</FolderTitle>
+                {files.map((f, i) => <File folder={folder} file={f} key={f} recent={i === 0} />)}
+              </LogFolder>  
+            ))}
+          </FolderContainer>
+        </DataView>
       </React.Fragment>
     );
   }

@@ -5,7 +5,7 @@ import styled from 'styled-components';
 
 import { readLog } from '../actions';
 import { darken } from 'polished';
-import { Loader, orange, green, ErrorWindow } from './elements';
+import { DataView, orange, green } from './elements';
 
 const Flex = styled.div`
   display: flex;
@@ -122,10 +122,6 @@ class LogPage extends React.Component {
       this.password = this.props.password;
     }
 
-    if (this.props.logs.fetching) return <Loader />;
-    if (this.props.logs.error) return <ErrorWindow message={this.props.logs.error.message} />;
-    if (!text) return <ErrorWindow />;
-
     const lines = text.split('\n').reverse().filter(line => line && (showNonAuth || !line.includes('❌')));
     const numOfPages = Math.ceil(lines.length / pageMax) || 1;
     const page = Math.min(numOfPages, this.state.page);
@@ -134,25 +130,27 @@ class LogPage extends React.Component {
     return (
       <React.Fragment>
         <Helmet><title>GServer | Logs</title></Helmet>
-        <Flex>
-          <BackButton onClick={this.props.history.goBack}><span role='img' aria-label="logs">⬅</span> Back</BackButton>
-          <RefreshButton onClick={this.getLogText}><span role='img' aria-label="logs">🔄</span> Refresh</RefreshButton>
-          <ShowNonAuthButton onClick={() => this.setState(ps => ({ showNonAuth: !ps.showNonAuth }))}>
-            <span role='img' aria-label="logs">{showNonAuth ? '✔️' : '❌'}</span>
-            {' Show non-authenticated requests'}
-          </ShowNonAuthButton>
-          <span style={{ flexGrow: 1 }} />
-          <PaginationContainer>
-            <Page onClick={() => this.setState({ page: Math.max(page - 1, 1) })}>&laquo;</Page>
-            {Array(Math.min(7, numOfPages)).fill(0).map((v, i) => (
-              <Page key={i} active={i + startPage === page} onClick={() => this.setState({ page: i + startPage })}>{i + startPage}</Page>
-            ))}
-            <Page onClick={() => this.setState({ page: Math.min(page + 1, numOfPages) })}>&raquo;</Page>
-          </PaginationContainer>
-          <span style={{ flexGrow: 1 }} />
-          <ErrorCount><span role='img' aria-label="logs">⚠️</span>{text.split('\n').filter(line => line.includes('⚠️')).length} Errors</ErrorCount>
-        </Flex>
-        <p style={{ margin: 0, whiteSpace: 'pre-line' }}>{lines.slice((page - 1) * pageMax, page * pageMax + 1).join('\n')}</p>
+        <DataView isLoading={this.props.logs.fetching} isData={!!text} error={this.props.logs.error}>
+          <Flex>
+            <BackButton onClick={this.props.history.goBack}><span role='img' aria-label="logs">⬅</span> Back</BackButton>
+            <RefreshButton onClick={this.getLogText}><span role='img' aria-label="logs">🔄</span> Refresh</RefreshButton>
+            <ShowNonAuthButton onClick={() => this.setState(ps => ({ showNonAuth: !ps.showNonAuth }))}>
+              <span role='img' aria-label="logs">{showNonAuth ? '✔️' : '❌'}</span>
+              {' Show non-authenticated requests'}
+            </ShowNonAuthButton>
+            <span style={{ flexGrow: 1 }} />
+            <PaginationContainer>
+              <Page onClick={() => this.setState({ page: Math.max(page - 1, 1) })}>&laquo;</Page>
+              {Array(Math.min(7, numOfPages)).fill(0).map((v, i) => (
+                <Page key={i} active={i + startPage === page} onClick={() => this.setState({ page: i + startPage })}>{i + startPage}</Page>
+              ))}
+              <Page onClick={() => this.setState({ page: Math.min(page + 1, numOfPages) })}>&raquo;</Page>
+            </PaginationContainer>
+            <span style={{ flexGrow: 1 }} />
+            <ErrorCount><span role='img' aria-label="logs">⚠️</span>{text.split('\n').filter(line => line.includes('⚠️')).length} Errors</ErrorCount>
+          </Flex>
+          <p style={{ margin: 0, whiteSpace: 'pre-line' }}>{lines.slice((page - 1) * pageMax, page * pageMax + 1).join('\n')}</p>
+        </DataView>
       </React.Fragment>
     );
   }
