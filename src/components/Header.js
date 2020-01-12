@@ -77,7 +77,7 @@ class Header extends React.Component {
         <Links>
           <NavBarLink to="/logs" name="Logs" icon="📜" />
           <NavBarLink to="/" name="Temp1" icon="🐎" exact />
-          <NavBarLink to="/" name="Temp2" icon="🎥" exact />
+          <NavBarLink to="/" name="Temp2" icon="🍕" exact />
         </Links>
       </NavBar>
     );
